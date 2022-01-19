@@ -9,19 +9,49 @@ function extract(code) {
         return allNewLinesArray.length + 1; // +1 because line start at 1 (no line zero)
     };
 
-    // Version 1-> Only one code block that we fill with all the expressions as they come
-    // To do -> Keep an array of blocks, with each its own indent space and return line
+    const _initCodeBlock = _codeBlock => {
+        _codeBlock.source = '';
+        _codeBlock.startLine = 0;
+        _codeBlock.columnOffset = 0;
+        _codeBlock.deIndentPattern = '';
+    }
+
+    const _pushBlock = (_codeBlock, _codeBlockArray) => {
+        _codeBlockArray.push({
+            source: _codeBlock.source,
+            startLine: _codeBlock.startLine,
+            columnOffset: _codeBlock.columnOffset
+        })
+    }
+
+    // This processor will store the code blocks into the codeBlock Array.
+    // Here are the expected code blocks
+    // 1) File top part with global variables and file imports
+    // 2) Expressions inside curly braces inside the HTML code (attributes and text values)
+    // 3) Main script part, either between the <script> </script> tags, or after the </style> tag
+
+    let codeBlockArray = [];
 
     let InCodeArea = true; 
+    // current code block
     let codeBlock= {
         source: '',
-        startLine: 0,
+        startLine: 1,
         columnOffset: 0,
         deIndentPattern : '',
     }
 
     const parser = new htmlparser.Parser({
-        onopentag: (name) => {
+        onopentag: (name, params) => {
+            if (InCodeArea) {
+                // This section of code is finished -> push the current code as a new only if it has some information.
+                if (codeBlock.source.trim() !== '') {
+                    _pushBlock(codeBlock, codeBlockArray);
+                    _initCodeBlock(codeBlock);
+                }
+            }
+            
+            console.log(`Receiving opening tag ${name} with attributes ${JSON.stringify(params)}`)
             if (name == 'script') {
                 // We will assume that the <script> tag is of proper javascript type.
                 // (Otherwise I guess eslint will shout...)
@@ -46,9 +76,12 @@ function extract(code) {
                 codeBlock.startLine = _countNewLines(code, parser.endIndex) + 1;
             } else if (name === 'script') {
                 InCodeArea = false
+                _pushBlock(codeBlock, codeBlockArray);
+                _initCodeBlock(codeBlock);
             }
         },
         ontext: data => {
+            console.log(`Receiving text tag -> ${data}END`);
             if (InCodeArea) {
 
 
@@ -59,16 +92,22 @@ function extract(code) {
                     codeBlock.deIndentPattern = new RegExp('^(?:' + firstSpacePattern + ')?(.*)','gm');
                 }
                 codeBlock.source += data.replace(codeBlock.deIndentPattern, (_, unIndentedLine) => unIndentedLine );
-                const firstLinePattern = /^(\r\n|\n|\r)/g.exec(codeBlock.source)[1];
-                codeBlock.source = codeBlock.source.substring(firstLinePattern.length); 
+                const firstLinePattern = /^(\r\n|\n|\r)/g.exec(codeBlock.source);
+                if (firstLinePattern) {
+                    // If we have a match, then the matched group is in index 1 of the returned array
+                    codeBlock.source = codeBlock.source.substring(firstLinePattern[1].length); 
+                }
 
             }
         }
     });
 
     parser.parseComplete(code);
+    if (codeBlockArray.length == 0) {
+        codeBlockArray.push(codeBlock);
+    }
 
-    return codeBlock;
+    return codeBlockArray;
 
 }
 

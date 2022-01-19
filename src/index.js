@@ -2,22 +2,24 @@ const extract = require('./extract');
 
 const riotProcessor = () => {
 
-    let fileParsingInfo;
+    let codeBlockArray;
 
     return {
         preprocess: content => {
-            fileParsingInfo = extract(content);
-            return [fileParsingInfo.source];
+            codeBlockArray = extract(content);
+            return codeBlockArray.map(c => c.source);
         },
 
         postprocess: (messages) => {
             const finalMessageList = [];
             
-            messages[0].forEach((message) => {
-                message.column += fileParsingInfo.columnOffset;
-                message.line += fileParsingInfo.startLine - 1;
-                finalMessageList.push(message);
-            });
+            for (let i = 0; i < messages.length; i++) {
+                messages[i].forEach((message) => {
+                    message.column += codeBlockArray[i].columnOffset;
+                    message.line += codeBlockArray[i].startLine - 1;
+                    finalMessageList.push(message);
+                });
+            }
             return finalMessageList;
         }
     }
