@@ -1,17 +1,19 @@
 'use strict'
 
 const htmlparser = require('htmlparser2');
+const config = require('./config');
 
 function extract(code) {
 
     const _countNewLines = (sourceString, currentIndex) => {
         const allNewLinesArray = sourceString.slice(0, currentIndex).match(/\r\n|\n|\r/g) || [];
-        return allNewLinesArray.length + 1; // +1 because line start at 1 (no line zero)
+        return allNewLinesArray.length; // +1 because line start at 1 (no line zero)
     };
 
     const _initCodeBlock = _codeBlock => {
         _codeBlock.source = '';
         _codeBlock.startLine = 0;
+        _codeBlock.lintStartLine = 0;
         _codeBlock.columnOffset = 0;
         _codeBlock.deIndentPattern = '';
     }
@@ -20,8 +22,10 @@ function extract(code) {
         _codeBlockArray.push({
             source: _codeBlock.source,
             startLine: _codeBlock.startLine,
+            lintStartLine: currentLintLine,
             columnOffset: _codeBlock.columnOffset
-        })
+        });
+        currentLintLine += _countNewLines(_codeBlock.source) + 1;
     }
 
     // This processor will store the code blocks into the codeBlock Array.
@@ -30,13 +34,23 @@ function extract(code) {
     // 2) Expressions inside curly braces inside the HTML code (attributes and text values)
     // 3) Main script part, either between the <script> </script> tags, or after the </style> tag
 
+    // Each code block will have the following structure:
+    // 
+    // string source contains the actual JS Code
+    // number startline contains the original source code start line number of the block
+    // number lintStartLine contains the line at which the block starts in the extracted linter version
+    // number columnOffset contains the length of the de-indenting pattern at line start
+    // string deIndentPattern contains the actual pattern used to de-indent the code
+
     let codeBlockArray = [];
+    let currentLintLine = 1;
 
     let InCodeArea = true; 
     // current code block
     let codeBlock= {
         source: '',
         startLine: 1,
+        lintStartLine: 1,
         columnOffset: 0,
         deIndentPattern : '',
     }
@@ -51,7 +65,7 @@ function extract(code) {
                 }
             }
             
-            console.log(`Receiving opening tag ${name} with attributes ${JSON.stringify(params)}`)
+            if (config.log_tags) console.log(`Receiving opening tag ${name} with attributes ${JSON.stringify(params)}`);
             if (name == 'script') {
                 // We will assume that the <script> tag is of proper javascript type.
                 // (Otherwise I guess eslint will shout...)
@@ -61,8 +75,9 @@ function extract(code) {
                 codeBlock.source = '';
                 codeBlock.deIndentPattern = '';
 
-                // Code begins at next line, so code line = new lines so far + 1
-                codeBlock.startLine = _countNewLines(code, parser.endIndex) + 1;
+                // Code begins at next line, so code line = new lines so far + 1 
+                // and +1 again as the first line begins with index = 1
+                codeBlock.startLine = _countNewLines(code, parser.endIndex) + 2;
 
                 return;
             } 
@@ -73,7 +88,7 @@ function extract(code) {
             if (name === 'style') {
                 // We finish the style portion, we will enter the code area
                 InCodeArea = true
-                codeBlock.startLine = _countNewLines(code, parser.endIndex) + 1;
+                codeBlock.startLine = _countNewLines(code, parser.endIndex) + 2; // +2 is due to same reasons than above
             } else if (name === 'script') {
                 InCodeArea = false
                 _pushBlock(codeBlock, codeBlockArray);
@@ -81,9 +96,8 @@ function extract(code) {
             }
         },
         ontext: data => {
-            console.log(`Receiving text tag -> ${data}END`);
+            // if (config.log_tags) console.log(`Receiving text tag -> ${data}END`);
             if (InCodeArea) {
-
 
                 if (codeBlock.deIndentPattern === '') {
                     // 'exec' will return an array where [0] is the whole match and [1] is the group matched (the spaces in our case)

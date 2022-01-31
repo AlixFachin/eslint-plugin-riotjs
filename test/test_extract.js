@@ -30,6 +30,7 @@ describe('Basic tests', () => {
         expect(parseResult[0].source).to.not.be.undefined;
         expect(parseResult[0].source).to.equal('i=i+1\n');
         expect(parseResult[0].startLine).to.equal(6);
+        expect(parseResult[0].lintStartLine).to.equal(1);
         expect(parseResult[0].columnOffset).to.equal(0);
     })
 
@@ -52,6 +53,7 @@ describe('Basic tests', () => {
         expect(parseResult[0].source).to.not.be.undefined;
         expect(parseResult[0].source).to.equal('i=i+1\n');
         expect(parseResult[0].startLine).to.equal(7);
+        expect(parseResult[0].lintStartLine).to.equal(1);
         expect(parseResult[0].columnOffset).to.equal(0);
     })
 
@@ -75,6 +77,7 @@ describe('Basic tests', () => {
         expect(parseResult[0].source).to.not.be.undefined;
         expect(parseResult[0].source).to.equal('i=i+1\nj=j+1\n\t');
         expect(parseResult[0].startLine).to.equal(7);
+        expect(parseResult[0].lintStartLine).to.equal(1);
         expect(parseResult[0].columnOffset).to.equal(2);
     })
 
@@ -97,6 +100,7 @@ describe('Basic tests', () => {
         expect(parseResult[0].source).to.not.be.undefined;
         expect(parseResult[0].source).to.equal('i=i+1\n  j=j+1\n  ');
         expect(parseResult[0].startLine).to.equal(7);
+        expect(parseResult[0].lintStartLine).to.equal(1);
         expect(parseResult[0].columnOffset).to.equal(4);
     });
 
@@ -123,6 +127,8 @@ describe('Basic tests', () => {
         expect(parseResult[1].source).to.equal('i=i+1\n  j=j+1\n  ');
         expect(parseResult[0].startLine).to.equal(1);
         expect(parseResult[1].startLine).to.equal(9);
+        expect(parseResult[0].lintStartLine).to.equal(1);
+        expect(parseResult[1].lintStartLine).to.equal(4); // because we expect another new line between codeBlock[0] and codeBlock[1]
         
     });
 
