@@ -1,6 +1,6 @@
 # eslint-plugin-riotjs
 
-## Abstract 🤓
+## Overview 🤓
 
 This package contains a eslint plugin for riot.js files.
 There are already pretty good plugins out there, but for work I needed
@@ -36,6 +36,8 @@ module.exports = {
 
 ## How does this work (as a code) 👨‍💻
 
+### The general idea
+
 - The plugin contains a `processor`, which must have two methods:
 
   - `preprocess`: which reads a source file and extracts the javascript which should be read, potentially in multiple blocks
@@ -47,7 +49,21 @@ module.exports = {
 - The official documentation for es-lint plugins is at the following link:
   <https://eslint.org/docs/developer-guide/working-with-plugins>
 
-## How to Contribute 😎
+### Some detailed explanations 👨🏻‍🏫
+
+- The `extract.js` script returns an array of "codeBlock" objects, which store the JS code (`codeBlock.source`) and other informations (start and end line, etc...)
+- The pre-processor will concatenate all the `source` properties, but keep the other information afterwards to reconstitute the proper original number
+
+- One issue was that we were using a lot of HTML strings into our JS code, which confuses the hell out of the HTML parser.
+
+```
+  const message = '<p>This is a paragraph</p>';
+```
+
+So I had to add a routine during the pre-processor which adds the `<script> ... </script>` tags around the JS bit at the bottom.
+(And then remove the corresponding offset in line number to make as if the `<script>` was never added). 😓
+
+# How to Contribute 😎
 
 This plugin is my first! So I guess there are tons of stuff wrongs with it and ways to make it better.
 (And some hacky stuff because I'd prefer taking a shortcut sometimes).

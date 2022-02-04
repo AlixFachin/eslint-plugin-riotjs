@@ -83,6 +83,7 @@ function extract(code) {
             } 
             // If we have a tag different than script, it means that we are in the HTML or CSS bit
             InCodeArea = false;
+
         },
         onclosetag: name => {
             if (name === 'style') {
@@ -96,7 +97,7 @@ function extract(code) {
             }
         },
         ontext: data => {
-            // if (config.log_tags) console.log(`Receiving text tag -> ${data}END`);
+            if (config.log_tags) console.log(`Receiving text tag -> ${data}END`);
             if (InCodeArea) {
 
                 if (codeBlock.deIndentPattern === '') {

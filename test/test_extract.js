@@ -13,7 +13,7 @@ describe('Basic tests', () => {
 
     })
 
-    it('Should parse a file without script tag, one line of code', () => {
+    it.only('Should parse a file without script tag, one line of code', () => {
         
         const testParam = ['<myComponent>',
         '<div>Test</div>',
