@@ -3,7 +3,7 @@ const expect = require('chai').expect;
 
 const extract = require('../src/extract.js');
 
-describe('Basic tests', () => {
+describe('Extraction tests', () => {
 
     it('Should not crash on calling an empty string', () => {
         const testParam = '';
@@ -13,7 +13,7 @@ describe('Basic tests', () => {
 
     })
 
-    it.only('Should parse a file without script tag, one line of code', () => {
+    it('Should parse a file without script tag, one line of code', () => {
         
         const testParam = ['<myComponent>',
         '<div>Test</div>',
@@ -128,7 +128,7 @@ describe('Basic tests', () => {
         expect(parseResult[0].startLine).to.equal(1);
         expect(parseResult[1].startLine).to.equal(9);
         expect(parseResult[0].lintStartLine).to.equal(1);
-        expect(parseResult[1].lintStartLine).to.equal(4); // because we expect another new line between codeBlock[0] and codeBlock[1]
+        expect(parseResult[1].lintStartLine).to.equal(3); 
         
     });
 

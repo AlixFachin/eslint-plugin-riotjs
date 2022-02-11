@@ -25,7 +25,7 @@ function extract(code) {
             lintStartLine: currentLintLine,
             columnOffset: _codeBlock.columnOffset
         });
-        currentLintLine += _countNewLines(_codeBlock.source) + 1;
+        currentLintLine += _countNewLines(_codeBlock.source);
     }
 
     // This processor will store the code blocks into the codeBlock Array.

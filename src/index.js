@@ -10,7 +10,7 @@ const riotProcessor = () => {
     }
 
     let codeBlockArray;
-    let hasAdjustedContent = true;
+    let hasAdjustedContent = false;
     let insertedTagLineOffset = 0;
 
     return {
@@ -45,15 +45,13 @@ const riotProcessor = () => {
                 const middleContent = content.slice(closeStyleTagIndex + '</style>'.length, 
                     finalTagIndex === -1 ? undefined : finalTagIndex );
                 
-                _logger(`Before Content:\n${beforeCloseStyleContent}\nMiddleContent:\n${middleContent}\nendContent:${endContent}\nlineOffset:${insertedTagLineOffset}`);
-
                 adjustedContent = beforeCloseStyleContent + '</style>\n<script>' + middleContent + '</script>\n' + endContent; 
 
             }
 
             // Objective: We concatenate all the blocks, but store in helper array the beginning line of each block.
             codeBlockArray = extract(hasAdjustedContent ? adjustedContent : content );
-            return [codeBlockArray.map(c => c.source).join('\n')] ;
+            return [codeBlockArray.map(c => c.source).join('')] ;
         },
 
         postprocess: (messages) => {
